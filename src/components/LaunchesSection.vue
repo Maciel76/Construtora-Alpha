@@ -45,17 +45,13 @@
         @touchmove="handleTouchMove"
         @touchend="handleTouchEnd"
       >
-        <div class="slider-track" :style="trackStyle">
+        <div class="slider-track">
           <div
             v-for="(launch, index) in filteredLaunches"
             :key="launch.id"
             class="launch-card"
-            :class="{
-              active: centerIndex === index,
-              left: Math.abs(centerIndex - index) === 1 && index < centerIndex,
-              right: Math.abs(centerIndex - index) === 1 && index > centerIndex,
-              far: Math.abs(centerIndex - index) > 1,
-            }"
+            :class="getCardClass(index)"
+            :style="getCardStyle(index)"
             @click="centerIndex = index"
           >
             <div class="card-inner">
@@ -414,14 +410,52 @@ export default {
         (launch) => launch.category === this.activeCategory
       );
     },
-    trackStyle() {
-      return {
-        transform: `translateX(calc(50% - ${this.centerIndex * 420}px))`,
-        transition: "transform 0.7s cubic-bezier(0.33, 1, 0.68, 1)",
-      };
-    },
   },
   methods: {
+    getCardClass(index) {
+      const diff = index - this.centerIndex;
+      if (diff === 0) return "active";
+      if (diff === -1) return "left";
+      if (diff === 1) return "right";
+      return "far";
+    },
+    getCardStyle(index) {
+      const diff = index - this.centerIndex;
+      const absDiff = Math.abs(diff);
+      const total = this.filteredLaunches.length;
+
+      if (absDiff > 2) {
+        return { opacity: 0, pointerEvents: "none", transform: `translateX(${diff * 200}px) scale(0.7)` };
+      }
+
+      let translateX = diff * 420;
+      let scale = 1;
+      let zIndex = 10;
+      let opacity = 1;
+
+      if (absDiff === 0) {
+        scale = 1.05;
+        zIndex = 10;
+        translateX = 0;
+      } else if (absDiff === 1) {
+        scale = 0.88;
+        zIndex = 5;
+        opacity = 0.85;
+        translateX = diff * 380;
+      } else {
+        scale = 0.75;
+        zIndex = 1;
+        opacity = 0.4;
+        translateX = diff * 340;
+      }
+
+      return {
+        transform: `translateX(${translateX}px) scale(${scale})`,
+        zIndex,
+        opacity,
+        filter: absDiff > 1 ? 'blur(2px)' : 'none',
+      };
+    },
     particleStyle(i) {
       const size = Math.random() * 6 + 2;
       return {
@@ -689,47 +723,39 @@ export default {
 .launches-slider {
   position: relative;
   width: 100%;
-  height: 600px;
+  min-height: 620px;
   margin: 0 auto;
-  perspective: 1000px;
+  perspective: 1200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 60px;
 }
 
 .slider-track {
+  position: relative;
   display: flex;
-  gap: 40px;
-  position: absolute;
-  left: 0;
-  top: 0;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 580px;
 }
 
 .launch-card {
   width: 400px;
-  height: 550px;
-  position: relative;
-  transition: all 0.5s ease;
+  min-height: 560px;
+  position: absolute;
+  left: 50%;
+  margin-left: -200px;
+  transition: all 0.6s cubic-bezier(0.33, 1, 0.68, 1);
+  cursor: pointer;
 
   &.active {
-    transform: translateY(-20px) scale(1.05);
     z-index: 10;
   }
 
-  &.left {
-    transform: translateX(-100px) scale(0.9);
-    opacity: 0.8;
-    z-index: 5;
-    filter: brightness(0.9);
-  }
-
-  &.right {
-    transform: translateX(100px) scale(0.9);
-    opacity: 0.8;
-    z-index: 5;
-    filter: brightness(0.9);
-  }
-
   &.far {
-    opacity: 0.4;
-    filter: blur(2px);
+    pointer-events: none;
   }
 }
 
@@ -739,6 +765,7 @@ export default {
   background: white;
   border-radius: 20px;
   overflow: hidden;
+  overflow-y: auto;
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
   transition: all 0.5s ease;
 
@@ -1076,34 +1103,35 @@ export default {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 50px;
-  height: 50px;
+  width: 56px;
+  height: 56px;
   background: white;
-  border: none;
+  border: 2px solid rgba($primary-color, 0.15);
   border-radius: 50%;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
   cursor: pointer;
-  z-index: 20;
+  z-index: 30;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: $primary-color;
   transition: all 0.3s ease;
 
   &:hover {
     background: $primary-color;
     color: white;
-    transform: translateY(-50%) scale(1.1);
-    box-shadow: 0 12px 30px rgba($primary-color, 0.3);
+    transform: translateY(-50%) scale(1.15);
+    box-shadow: 0 12px 35px rgba($primary-color, 0.4);
+    border-color: $primary-color;
   }
 
   &.prev {
-    left: -25px;
+    left: 0;
   }
 
   &.next {
-    right: -25px;
+    right: 0;
   }
 }
 
@@ -1251,19 +1279,8 @@ export default {
 @media (max-width: 1200px) {
   .launch-card {
     width: 360px;
-    height: 520px;
-
-    &.left {
-      transform: translateX(-80px) scale(0.9);
-    }
-
-    &.right {
-      transform: translateX(80px) scale(0.9);
-    }
-  }
-
-  .slider-track {
-    gap: 30px;
+    margin-left: -180px;
+    min-height: 530px;
   }
 }
 
@@ -1273,12 +1290,14 @@ export default {
   }
 
   .launches-slider {
-    height: 500px;
+    min-height: 520px;
+    padding: 20px 50px;
   }
 
   .launch-card {
-    width: 320px;
-    height: 480px;
+    width: 340px;
+    margin-left: -170px;
+    min-height: 500px;
   }
 
   .section-header .section-title {
@@ -1291,31 +1310,28 @@ export default {
 }
 
 @media (max-width: 768px) {
+  .launches-slider {
+    min-height: 480px;
+    padding: 20px 45px;
+  }
+
   .launch-card {
-    width: 280px;
-    height: 450px;
-
-    &.active {
-      transform: translateY(-10px) scale(1.03);
-    }
-
-    &.left,
-    &.right {
-      display: none;
-    }
+    width: 300px;
+    margin-left: -150px;
+    min-height: 460px;
   }
 
   .slider-nav {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     font-size: 1rem;
 
     &.prev {
-      left: 10px;
+      left: 0;
     }
 
     &.next {
-      right: 10px;
+      right: 0;
     }
   }
 
@@ -1331,12 +1347,14 @@ export default {
 
 @media (max-width: 576px) {
   .launches-slider {
-    height: 420px;
+    min-height: 440px;
+    padding: 10px 40px;
   }
 
   .launch-card {
     width: 260px;
-    height: 400px;
+    margin-left: -130px;
+    min-height: 420px;
   }
 
   .image-container {
@@ -1361,6 +1379,12 @@ export default {
     flex: 1;
     min-width: calc(50% - 8px);
     justify-content: center;
+  }
+
+  .slider-nav {
+    width: 38px;
+    height: 38px;
+    font-size: 0.9rem;
   }
 }
 </style>

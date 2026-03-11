@@ -10,12 +10,12 @@
 </template>
 
 <script>
-import HeroBanner from "@/components/servicepage/construtora-alpha/HeroBanner.vue";
-import PortfolioSection from "@/components/servicepage/construtora-alpha/PortfolioSection.vue";
-import LaunchesSection from "@/components/servicepage/construtora-alpha/LaunchesSection.vue";
-import VirtualTour from "@/components/servicepage/construtora-alpha/VirtualTour.vue";
-import StatsSection from "@/components/servicepage/construtora-alpha/StatsSection.vue";
-import CareersSection from "@/components/servicepage/construtora-alpha/CareersSection.vue";
+import HeroBanner from "@/components/HeroBanner.vue";
+import PortfolioSection from "@/components/PortfolioSection.vue";
+import LaunchesSection from "@/components/LaunchesSection.vue";
+import VirtualTour from "@/components/VirtualTour.vue";
+import StatsSection from "@/components/StatsSection.vue";
+import CareersSection from "@/components/CareersSection.vue";
 
 export default {
   name: "HomeAlpha",
